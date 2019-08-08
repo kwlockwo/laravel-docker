@@ -7,7 +7,7 @@ build:
     web: Dockerfile
 release:
   command:
-    - php artisan migrate --no-interaction --no-ansi
+    - php artisan migrate --no-interaction --no-ansi --force
   image: web
 run:
   web: /bin/start.sh
