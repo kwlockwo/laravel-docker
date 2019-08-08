@@ -1,0 +1,44 @@
+version: '2'
+services:
+
+  web:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./src:/docroot
+    environment:
+      - "DB_HOST=postgres"
+      - "DB_DATABASE=test"
+      - "DB_USERNAME=test"
+      - "DB_PASSWORD=test"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:10.1-alpine
+    volumes:
+      - pgsqldata:/var/lib/postgresql/data
+    environment:
+      - "POSTGRES_DB=test"
+      - "POSTGRES_USER=test"
+      - "POSTGRES_PASSWORD=test"
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:4.0-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+
+#  elastic:
+#    image: elasticsearch:5.5-alpine
+#    ports:
+#        - "9200:9200"
+
+volumes:
+  pgsqldata:
