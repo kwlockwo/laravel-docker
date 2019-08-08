@@ -1,0 +1,20 @@
+{
+  "addons": [
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+
+  ],
+  "env": {
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "name": "laravel-docker",
+  "scripts": {
+    "postdeploy": "php artisan migrate:fresh --seed --no-interaction --no-ansi --force"
+  },
+  "stack": "container"
+}
