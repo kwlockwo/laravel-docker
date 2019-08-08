@@ -104,9 +104,9 @@ RUN \
     && echo "nonroot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # copy application code
-ONBUILD ADD ./src/ $DOCROOT/
+COPY ./src/. $DOCROOT/
 
-ONBUILD RUN \
+RUN \
     # attempt to composer install
     # (if depends on any commands that don't exist at this time, like npm, explicit doing composer install on downstream Dockerfile is necessary)
     if [ -f "composer.json" ]; then \
