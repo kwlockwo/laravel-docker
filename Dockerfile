@@ -104,7 +104,7 @@ RUN \
     && echo "nonroot ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # copy application code
-ONBUILD COPY src/ $DOCROOT/
+ONBUILD ADD ./src/ $DOCROOT/
 
 ONBUILD RUN \
     # attempt to composer install
