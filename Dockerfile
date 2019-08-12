@@ -1,44 +1,10 @@
-FROM alpine
+FROM php:7.2.19-fpm-alpine3.9
 
 ENV DOCROOT /docroot
 WORKDIR $DOCROOT
 
 RUN \
     apk update \
-    \
-    # install php
-    && apk add php7 \
-    && apk add php7-apcu \
-    && apk add php7-ctype \
-    && apk add php7-curl \
-    && apk add php7-dom \
-    && apk add php7-fileinfo \
-    && apk add php7-ftp \
-    && apk add php7-iconv \
-    && apk add php7-intl \
-    && apk add php7-json \
-    && apk add php7-mbstring \
-    && apk add php7-mcrypt \
-    && apk add php7-opcache \
-    && apk add php7-openssl \
-    && apk add php7-pdo \
-    && apk add php7-pdo_pgsql \
-    && apk add php7-pgsql \
-    && apk add php7-phar \
-    && apk add php7-posix \
-    && apk add php7-session \
-    && apk add php7-simplexml \
-    && apk add php7-tokenizer \
-    && apk add php7-xml \
-    && apk add php7-xmlreader \
-    && apk add php7-xmlwriter \
-    && apk add php7-zlib \
-    \
-    # install php-fpm
-    && apk add php7-fpm \
-    # make php-fpm listen to not tcp port but unix socket
-    && sed -i -E "s/127\.0\.0\.1:9000/\/var\/run\/php-fpm\/php-fpm.sock/" /etc/php7/php-fpm.d/www.conf \
-    && mkdir /var/run/php-fpm \
     \
     # install nginx and create default pid directory
     && apk add nginx \
@@ -48,15 +14,39 @@ RUN \
     && sed -i -E "s/error_log .+/error_log \/dev\/stderr warn;/" /etc/nginx/nginx.conf \
     && sed -i -E "s/access_log .+/access_log \/dev\/stdout main;/" /etc/nginx/nginx.conf \
     \
+    # install php-fpm
+    && apk add php7-fpm \
+    # make php-fpm listen to not tcp port but unix socket
+    && sed -i -E "s/127\.0\.0\.1:9000/\/var\/run\/php-fpm\/php-fpm.sock/" /etc/php7/php-fpm.d/www.conf \
+    && mkdir /var/run/php-fpm \
+    \
     # install supervisor
     && apk add supervisor \
     && mkdir -p /etc/supervisor.d/ \
     \
     # remove caches to decrease image size
-    && rm -rf /var/cache/apk/* \
+    && rm -rf /var/cache/apk/*
+
+RUN apk add --no-cache \
+        icu-dev gettext-dev postgresql-dev libxml2-dev libxslt-dev \
+        freetype libpng libjpeg-turbo freetype-dev libpng-dev libjpeg-turbo-dev \
+    && docker-php-ext-configure gd \
+        --with-gd \
+        --with-freetype-dir=/usr/include/ \
+        --with-png-dir=/usr/include/ \
+        --with-jpeg-dir=/usr/include/ \
+    && NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) \
     \
-    # install composer
-    && EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
+    && docker-php-ext-install -j${NPROC} gd \
+    && docker-php-ext-install \
+        bcmath calendar exif gd gettext intl \
+        pcntl pdo_pgsql pgsql shmop sockets \
+        sysvmsg sysvsem sysvshm wddx xsl zip \
+    \
+    && apk del --no-cache freetype-dev libpng-dev libjpeg-turbo-dev
+
+# install composer
+RUN EXPECTED_SIGNATURE=$(wget -q -O - https://composer.github.io/installer.sig) \
     && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php -r "if (hash_file('SHA384', 'composer-setup.php') === '$EXPECTED_SIGNATURE') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
     && php composer-setup.php --install-dir=/usr/bin --filename=composer \
