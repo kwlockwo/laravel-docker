@@ -28,7 +28,7 @@ RUN \
     && rm -rf /var/cache/apk/*
 
 RUN apk add --no-cache \
-        icu-dev gettext-dev postgresql-dev libxml2-dev libxslt-dev \
+        bash icu-dev gettext-dev postgresql-dev libxml2-dev libxslt-dev \
         freetype libpng libjpeg-turbo freetype-dev libpng-dev libjpeg-turbo-dev \
     && docker-php-ext-configure gd \
         --with-gd \
@@ -105,6 +105,8 @@ RUN \
     \
     # fix permission of docroot for non-root user
     && chmod -R a+w $DOCROOT
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 USER nonroot
 
